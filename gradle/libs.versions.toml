@@ -10,7 +10,7 @@ detekt = "1.23.8"
 ktfmt = "0.25.0"
 intelliJPlatform = "2.11.0"
 kotlin = "2.3.0"
-kover = "0.9.5"
+kover = "0.9.7"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
