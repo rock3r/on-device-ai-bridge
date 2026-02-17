@@ -1,0 +1,27 @@
+# Detekt configuration
+# Builds upon the default config (buildUponDefaultConfig = true in build.gradle.kts)
+# Only overrides where defaults are too strict for IntelliJ plugin development
+
+style:
+  MaxLineLength:
+    maxLineLength: 120
+    excludeCommentStatements: true
+  WildcardImport:
+    active: true
+  ReturnCount:
+    max: 8
+
+complexity:
+  LongParameterList:
+    functionThreshold: 8
+    constructorThreshold: 10
+  ComplexCondition:
+    threshold: 5
+  CyclomaticComplexMethod:
+    threshold: 30
+  TooManyFunctions:
+    thresholdInFiles: 15
+    thresholdInClasses: 15
+    thresholdInInterfaces: 15
+  NestedBlockDepth:
+    threshold: 5

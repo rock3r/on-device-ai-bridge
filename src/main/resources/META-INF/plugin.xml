@@ -1,0 +1,65 @@
+<!-- Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license. -->
+<idea-plugin>
+    <id>dev.sebastiano.plugins.appleintelligence</id>
+    <name>On-Device AI Bridge</name>
+    <vendor>Sebastiano Poggi</vendor>
+    <description><![CDATA[
+    Exposes the on-device AI (FoundationModels) as an OpenAI-compatible REST API.
+    Requires macOS 26+ (Tahoe) with on-device AI enabled and Apple Silicon.
+    Use with Cursor, Continue, or any tool that supports OpenAI-compatible endpoints.
+  ]]></description>
+    <category>Local AI/ML Tools</category>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <resource-bundle>messages.AppleAiBundle</resource-bundle>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService
+                serviceImplementation="dev.sebastiano.plugins.appleintelligence.AppleAiSettings"/>
+
+        <applicationService
+                serviceImplementation="dev.sebastiano.plugins.appleintelligence.AppleAiService"/>
+
+        <applicationConfigurable
+                parentId="tools"
+                instance="dev.sebastiano.plugins.appleintelligence.AppleAiConfigurable"
+                id="apple.ai.settings"
+                key="apple.ai.configurable.displayName"
+                bundle="messages.AppleAiBundle"/>
+
+        <httpRequestHandler
+                implementation="dev.sebastiano.plugins.appleintelligence.AppleAiRestService"/>
+
+        <notificationGroup
+                id="AppleOnDeviceAI"
+                displayType="BALLOON"
+                bundle="messages.AppleAiBundle"
+                key="apple.ai.notification.group"/>
+    </extensions>
+
+    <actions>
+        <action
+                id="AppleAi.ToggleServer"
+                class="dev.sebastiano.plugins.appleintelligence.AppleAiToggleServerAction">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action
+                id="AppleAi.ToggleDebugLogs"
+                class="dev.sebastiano.plugins.appleintelligence.AppleAiToggleDebugLogsAction"
+                internal="true">
+            <add-to-group group-id="Internal" anchor="last"/>
+        </action>
+    </actions>
+
+    <applicationListeners>
+        <listener
+                class="dev.sebastiano.plugins.appleintelligence.AppleAiStartupListener"
+                topic="com.intellij.ide.AppLifecycleListener"/>
+    </applicationListeners>
+
+    <extensions defaultExtensionNs="org.jetbrains">
+        <customPortServerManager
+                implementation="dev.sebastiano.plugins.appleintelligence.AppleAiCustomPortServerManager"/>
+    </extensions>
+</idea-plugin>
