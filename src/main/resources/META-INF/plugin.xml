@@ -28,9 +28,6 @@
                 key="apple.ai.configurable.displayName"
                 bundle="messages.AppleAiBundle"/>
 
-        <httpRequestHandler
-                implementation="dev.sebastiano.plugins.appleintelligence.AppleAiRestService"/>
-
         <notificationGroup
                 id="AppleOnDeviceAI"
                 displayType="BALLOON"
@@ -58,8 +55,4 @@
                 topic="com.intellij.ide.AppLifecycleListener"/>
     </applicationListeners>
 
-    <extensions defaultExtensionNs="org.jetbrains">
-        <customPortServerManager
-                implementation="dev.sebastiano.plugins.appleintelligence.AppleAiCustomPortServerManager"/>
-    </extensions>
 </idea-plugin>

@@ -7,7 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** Unit tests for [dev.sebastiano.plugins.appleintelligence.parseMacOSMajorVersion] and the version-related availability logic. */
+/** Unit tests for [parseMacOSMajorVersion] and the version-related availability logic. */
 class AppleAiAvailabilityTest {
 
     // region parseMacOSMajorVersion — typical macOS versions

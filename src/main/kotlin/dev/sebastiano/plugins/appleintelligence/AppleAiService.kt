@@ -41,6 +41,7 @@ private fun reportProgress(@Nls text: String) {
 internal class AppleAiService(val coroutineScope: CoroutineScope) : Disposable {
 
     @Volatile private var swiftHelper: SwiftHelperProcess? = null
+    private val httpServer = AppleAiHttpServer()
 
     @get:Nls
     val unavailabilityReason: String?
@@ -84,7 +85,18 @@ internal class AppleAiService(val coroutineScope: CoroutineScope) : Disposable {
         val helper = SwiftHelperProcess(Path.of(binaryPath))
         return if (helper.start()) {
             swiftHelper = helper
-            AppleAiCustomPortServerManager.portChanged()
+            try {
+                httpServer.start(settings.host, settings.port)
+            } catch (e: Exception) {
+                LOG.error("Failed to start HTTP server, stopping helper", e)
+                helper.stop()
+                swiftHelper = null
+                notify(
+                    AppleAiBundle.message("apple.ai.notification.error", e.message ?: "Failed to bind server port"),
+                    NotificationType.ERROR,
+                )
+                return false
+            }
             notify(
                 AppleAiBundle.message("apple.ai.notification.started", settings.host, settings.port.toString()),
                 NotificationType.INFORMATION,
@@ -107,9 +119,9 @@ internal class AppleAiService(val coroutineScope: CoroutineScope) : Disposable {
     }
 
     fun stopHelper() {
+        httpServer.stop()
         swiftHelper?.stop()
         swiftHelper = null
-        AppleAiCustomPortServerManager.portChanged()
         notify(AppleAiBundle.message("apple.ai.notification.stopped"), NotificationType.INFORMATION)
     }
 
@@ -287,6 +299,7 @@ internal class AppleAiService(val coroutineScope: CoroutineScope) : Disposable {
     private data class BuildOutput(val exitCode: Int, val output: String)
 
     override fun dispose() {
+        httpServer.stop()
         swiftHelper?.stop()
         swiftHelper = null
     }

@@ -217,10 +217,7 @@ internal class AppleAiConfigurable :
                 .columns(PORT_FIELD_COLUMNS)
                 .bindIntText(
                     { settings.state.port },
-                    {
-                        settings.loadState(settings.state.copy(port = it))
-                        AppleAiCustomPortServerManager.portChanged()
-                    },
+                    { settings.loadState(settings.state.copy(port = it)) },
                 )
                 .onChanged { panel().apply() }
                 .comment(AppleAiBundle.message("apple.ai.settings.restartRequired"))

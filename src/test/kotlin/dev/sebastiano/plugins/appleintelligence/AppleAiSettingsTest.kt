@@ -7,7 +7,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 
-/** Unit tests for [dev.sebastiano.plugins.appleintelligence.AppleAiSettings], focusing on state persistence (API key tests require platform fixtures). */
+/** Unit tests for [AppleAiSettings], focusing on state persistence (API key tests require platform fixtures). */
 class AppleAiSettingsTest {
 
     private lateinit var settings: AppleAiSettings
