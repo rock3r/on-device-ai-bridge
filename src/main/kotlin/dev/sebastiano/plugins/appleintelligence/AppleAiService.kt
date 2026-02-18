@@ -107,7 +107,7 @@ internal class AppleAiService(val coroutineScope: CoroutineScope) : Disposable {
         }
     }
 
-    private fun startHttpServer(settings: AppleAiSettings, helper: SwiftHelperProcess): Boolean {
+    private fun startHttpServer(settings: AppleAiSettings.State, helper: SwiftHelperProcess): Boolean {
         val serverStart = runCatching { httpServer.start(settings.host, settings.port) }
         if (serverStart.isSuccess) return true
         val error = serverStart.exceptionOrNull()
