@@ -121,59 +121,9 @@ internal class AppleAiConfigurable :
                     modelStatusLabel = this
                 }
             }
-            row(AppleAiBundle.message("apple.ai.settings.endpoint")) {
-                @Suppress("HttpUrlsUsage")
-                comment("http://${displayHost(settings)}:${settings.state.port}/v1/chat/completions").applyToComponent {
-                    endpointComment = this
-                }
-                actionButton(
-                    object :
-                        DumbAwareAction(
-                            AppleAiBundle.message("apple.ai.settings.endpoint.copy"),
-                            null,
-                            AllIcons.Actions.Copy,
-                        ) {
-                        override fun actionPerformed(e: AnActionEvent) {
-                            @Suppress("HttpUrlsUsage")
-                            val url = "http://${displayHost(settings)}:${settings.state.port}/v1/chat/completions"
-                            CopyPasteManager.copyTextToClipboard(url)
-                        }
-                    }
-                )
-            }
-            row("") {
-                toggleButton =
-                    button(toggleButtonText()) {
-                            panel().apply()
-                            if (service.isRunning) {
-                                service.stopHelper()
-                            } else {
-                                val project = ProjectManager.getInstance().defaultProject
-                                runWithModalProgressBlocking(
-                                    project,
-                                    AppleAiBundle.message("apple.ai.settings.start"),
-                                ) {
-                                    service.startHelper()
-                                }
-                            }
-                            panel().reset()
-                        }
-                        .enabledIf(validHelper)
-                        .component
-                checkBox(AppleAiBundle.message("apple.ai.settings.autoStart"))
-                    .bindSelected(
-                        { settings.state.autoStart },
-                        { settings.loadState(settings.state.copy(autoStart = it)) },
-                    )
-            }
-            row("") {
-                label(disabledReasonText()).applyToComponent {
-                    disabledReasonLabel = this
-                    icon = AllIcons.General.Warning
-                    foreground = NamedColorUtil.getInactiveTextColor()
-                    isVisible = !validHelper()
-                }
-            }
+            endpointRow(settings) { endpointComment = it }
+            toggleRow(settings, service, validHelper, panel, { toggleButtonText() }) { toggleButton = it }
+            disabledReasonRow(validHelper) { disabledReasonLabel = it }
         }
 
         capture(Triple(serverStatusLabel, modelStatusLabel, endpointComment), toggleButton, disabledReasonLabel)
@@ -395,16 +345,86 @@ internal class AppleAiConfigurable :
         }
     }
 
-    @Nls private fun disabledReasonText(): String = AppleAiBundle.message("apple.ai.settings.status.disabled.reason")
+}
 
-    private fun isHelperPathValid(settings: AppleAiSettings): Boolean =
-        isHelperPathValid(settings.state.swiftHelperPath)
-
-    private fun isHelperPathValid(path: String): Boolean {
-        if (path.isBlank()) return false
-        val binary = Path.of(path)
-        return Files.isRegularFile(binary) && Files.isExecutable(binary)
+private fun Panel.endpointRow(settings: AppleAiSettings, capture: (JEditorPane) -> Unit) {
+    row(AppleAiBundle.message("apple.ai.settings.endpoint")) {
+        @Suppress("HttpUrlsUsage")
+        comment("http://${displayHost(settings)}:${settings.state.port}/v1/chat/completions").applyToComponent {
+            capture(this)
+        }
+        actionButton(
+            object :
+                DumbAwareAction(
+                    AppleAiBundle.message("apple.ai.settings.endpoint.copy"),
+                    null,
+                    AllIcons.Actions.Copy,
+                ) {
+                override fun actionPerformed(e: AnActionEvent) {
+                    @Suppress("HttpUrlsUsage")
+                    val url = "http://${displayHost(settings)}:${settings.state.port}/v1/chat/completions"
+                    CopyPasteManager.copyTextToClipboard(url)
+                }
+            }
+        )
     }
+}
+
+private fun Panel.toggleRow(
+    settings: AppleAiSettings,
+    service: AppleAiService,
+    validHelper: BooleanComponentPredicate,
+    panel: () -> DialogPanel,
+    toggleButtonText: () -> String,
+    capture: (JButton) -> Unit,
+) {
+    row("") {
+        capture(
+            button(toggleButtonText()) {
+                    panel().apply()
+                    if (service.isRunning) {
+                        service.stopHelper()
+                    } else {
+                        val project = ProjectManager.getInstance().defaultProject
+                        runWithModalProgressBlocking(
+                            project,
+                            AppleAiBundle.message("apple.ai.settings.start"),
+                        ) {
+                            service.startHelper()
+                        }
+                    }
+                    panel().reset()
+                }
+                .enabledIf(validHelper)
+                .component
+        )
+        checkBox(AppleAiBundle.message("apple.ai.settings.autoStart"))
+            .bindSelected(
+                { settings.state.autoStart },
+                { settings.loadState(settings.state.copy(autoStart = it)) },
+            )
+    }
+}
+
+private fun Panel.disabledReasonRow(validHelper: BooleanComponentPredicate, capture: (JLabel) -> Unit) {
+    row("") {
+        label(disabledReasonText()).applyToComponent {
+            capture(this)
+            icon = AllIcons.General.Warning
+            foreground = NamedColorUtil.getInactiveTextColor()
+            isVisible = !validHelper()
+        }
+    }
+}
+
+@Nls private fun disabledReasonText(): String = AppleAiBundle.message("apple.ai.settings.status.disabled.reason")
+
+private fun isHelperPathValid(settings: AppleAiSettings): Boolean = isHelperPathValid(settings.state.swiftHelperPath)
+
+private fun isHelperPathValid(path: String): Boolean {
+    if (path.isBlank()) return false
+    val binary = Path.of(path)
+    return Files.isRegularFile(binary) && Files.isExecutable(binary)
 }
 
 private class BooleanComponentPredicate(initialValue: Boolean) : ComponentPredicate() {

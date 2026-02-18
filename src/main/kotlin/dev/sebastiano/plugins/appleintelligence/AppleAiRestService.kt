@@ -73,6 +73,11 @@ internal class AppleAiRestService : RestService() {
         private const val AUTH_FAILURE_WINDOW_MS = 60_000L // 1 minute
         private const val MAX_TRACKED_ADDRESSES = 1_000
 
+        private const val REDACT_SHORT_LENGTH = 4
+        private const val REDACT_MEDIUM_LENGTH = 8
+        private const val REDACT_SHORT_EDGE = 2
+        private const val REDACT_LONG_EDGE = 4
+
         @VisibleForTesting internal val authFailureTracker = ConcurrentHashMap<String, AuthFailureRecord>()
 
         internal data class AuthFailureRecord(
@@ -131,9 +136,10 @@ internal class AppleAiRestService : RestService() {
 
         private fun String.redactedForLog(): String =
             when {
-                length <= 4 -> "***"
-                length <= 8 -> "${take(2)}...${takeLast(2)}"
-                else -> "${take(4)}...${takeLast(4)}"
+                length <= REDACT_SHORT_LENGTH -> "***"
+                length <= REDACT_MEDIUM_LENGTH ->
+                    "${take(REDACT_SHORT_EDGE)}...${takeLast(REDACT_SHORT_EDGE)}"
+                else -> "${take(REDACT_LONG_EDGE)}...${takeLast(REDACT_LONG_EDGE)}"
             }
 
         /** Returns `true` if the remote address is currently rate-limited due to too many auth failures. */

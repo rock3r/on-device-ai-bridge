@@ -42,6 +42,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import org.jetbrains.annotations.VisibleForTesting
 
+private val LOG = logger<AppleAiHttpHandler>()
+private const val MILLIS_PER_SECOND = 1000L
+
 /**
  * Exposes Apple on-device AI as OpenAI-compatible REST endpoints via a standalone Netty HTTP server.
  *
@@ -53,11 +56,9 @@ import org.jetbrains.annotations.VisibleForTesting
 internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>() {
 
     companion object {
-        private val LOG = logger<AppleAiHttpHandler>()
         private val STREAMING_TIMEOUT = 5.minutes
         private val GENERATION_TIMEOUT = 5.minutes
 
-        private const val MILLIS_PER_SECOND = 1000L
         private val ALLOWED_HOSTS = setOf("localhost", "127.0.0.1")
 
         private const val MAX_REQUEST_BODY_BYTES = 1024 * 1024 // 1 MB
@@ -66,6 +67,11 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         private const val MAX_AUTH_FAILURES = 10
         private const val AUTH_FAILURE_WINDOW_MS = 60_000L // 1 minute
         private const val MAX_TRACKED_ADDRESSES = 1_000
+
+        private const val REDACT_SHORT_LENGTH = 4
+        private const val REDACT_MEDIUM_LENGTH = 8
+        private const val REDACT_SHORT_EDGE = 2
+        private const val REDACT_LONG_EDGE = 4
 
         @VisibleForTesting internal val authFailureTracker = ConcurrentHashMap<String, AuthFailureRecord>()
 
@@ -125,9 +131,10 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
 
         private fun String.redactedForLog(): String =
             when {
-                length <= 4 -> "***"
-                length <= 8 -> "${take(2)}...${takeLast(2)}"
-                else -> "${take(4)}...${takeLast(4)}"
+                length <= REDACT_SHORT_LENGTH -> "***"
+                length <= REDACT_MEDIUM_LENGTH ->
+                    "${take(REDACT_SHORT_EDGE)}...${takeLast(REDACT_SHORT_EDGE)}"
+                else -> "${take(REDACT_LONG_EDGE)}...${takeLast(REDACT_LONG_EDGE)}"
             }
 
         /** Returns `true` if the remote address is currently rate-limited due to too many auth failures. */
@@ -490,33 +497,6 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         ctx.writeAndFlush(response)
     }
 
-    private fun jsonResponse(status: HttpResponseStatus, body: ByteArray): DefaultFullHttpResponse {
-        val response = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.wrappedBuffer(body))
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json")
-        response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, body.size)
-        return response
-    }
-
-    private fun sendJson(request: FullHttpRequest, ctx: ChannelHandlerContext, jsonBytes: ByteArray) {
-        LOG.debug("Apple AI: sending JSON response (${jsonBytes.size} bytes)")
-        val response = jsonResponse(HttpResponseStatus.OK, jsonBytes)
-        setCorsHeaders(request, response)
-        ctx.writeAndFlush(response)
-    }
-
-    private fun prepareStreamingResponse(request: FullHttpRequest, channel: Channel) {
-        val response = DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/event-stream")
-        response.headers().set(HttpHeaderNames.CACHE_CONTROL, "no-cache")
-        response.headers().set(HttpHeaderNames.CONNECTION, "keep-alive")
-        response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED)
-        setCorsHeaders(request, response)
-        HttpUtil.setKeepAlive(response, true)
-        channel.writeAndFlush(response)
-
-        runCatching { channel.config().setOption(ChannelOption.TCP_NODELAY, true) }
-        runCatching { channel.config().setOption(ChannelOption.SO_KEEPALIVE, true) }
-    }
 
     private fun sendStreamDelta(
         channel: Channel,
@@ -550,8 +530,6 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         sendDoneAndClose(channel)
     }
 
-    private fun nowEpochSeconds(): Long = System.currentTimeMillis() / MILLIS_PER_SECOND
-
     private data class StreamContext(val responseId: String, val created: Long, val model: String)
 
     private fun sendSseErrorAndClose(channel: Channel, errorMessage: String) {
@@ -574,3 +552,33 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         }
     }
 }
+
+private fun jsonResponse(status: HttpResponseStatus, body: ByteArray): DefaultFullHttpResponse {
+    val response = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.wrappedBuffer(body))
+    response.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json")
+    response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, body.size)
+    return response
+}
+
+private fun sendJson(request: FullHttpRequest, ctx: ChannelHandlerContext, jsonBytes: ByteArray) {
+    LOG.debug("Apple AI: sending JSON response (${jsonBytes.size} bytes)")
+    val response = jsonResponse(HttpResponseStatus.OK, jsonBytes)
+    AppleAiHttpHandler.setCorsHeaders(request, response)
+    ctx.writeAndFlush(response)
+}
+
+private fun prepareStreamingResponse(request: FullHttpRequest, channel: Channel) {
+    val response = DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
+    response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/event-stream")
+    response.headers().set(HttpHeaderNames.CACHE_CONTROL, "no-cache")
+    response.headers().set(HttpHeaderNames.CONNECTION, "keep-alive")
+    response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED)
+    AppleAiHttpHandler.setCorsHeaders(request, response)
+    HttpUtil.setKeepAlive(response, true)
+    channel.writeAndFlush(response)
+
+    runCatching { channel.config().setOption(ChannelOption.TCP_NODELAY, true) }
+    runCatching { channel.config().setOption(ChannelOption.SO_KEEPALIVE, true) }
+}
+
+private fun nowEpochSeconds(): Long = System.currentTimeMillis() / MILLIS_PER_SECOND

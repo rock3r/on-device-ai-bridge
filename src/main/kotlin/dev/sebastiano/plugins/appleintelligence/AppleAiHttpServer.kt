@@ -36,7 +36,7 @@ internal class AppleAiHttpServer {
         bossGroup = boss
         workerGroup = worker
 
-        try {
+        runCatching {
             val bootstrap =
                 ServerBootstrap()
                     .group(boss, worker)
@@ -57,11 +57,15 @@ internal class AppleAiHttpServer {
             val future = bootstrap.bind(InetSocketAddress(host, port)).sync()
             serverChannel = future.channel()
             LOG.info("Apple AI HTTP server started on $host:$port")
-        } catch (e: Exception) {
-            LOG.error("Failed to start Apple AI HTTP server on $host:$port", e)
-            stop()
-            throw e
         }
+            .onFailure { e ->
+                if (e is InterruptedException) {
+                    Thread.currentThread().interrupt()
+                }
+                LOG.error("Failed to start Apple AI HTTP server on $host:$port", e)
+                stop()
+            }
+            .getOrThrow()
     }
 
     fun stop() {

@@ -85,18 +85,7 @@ internal class AppleAiService(val coroutineScope: CoroutineScope) : Disposable {
         val helper = SwiftHelperProcess(Path.of(binaryPath))
         return if (helper.start()) {
             swiftHelper = helper
-            try {
-                httpServer.start(settings.host, settings.port)
-            } catch (e: Exception) {
-                LOG.error("Failed to start HTTP server, stopping helper", e)
-                helper.stop()
-                swiftHelper = null
-                notify(
-                    AppleAiBundle.message("apple.ai.notification.error", e.message ?: "Failed to bind server port"),
-                    NotificationType.ERROR,
-                )
-                return false
-            }
+            if (!startHttpServer(settings, helper)) return false
             notify(
                 AppleAiBundle.message("apple.ai.notification.started", settings.host, settings.port.toString()),
                 NotificationType.INFORMATION,
@@ -116,6 +105,26 @@ internal class AppleAiService(val coroutineScope: CoroutineScope) : Disposable {
             )
             false
         }
+    }
+
+    private fun startHttpServer(settings: AppleAiSettings, helper: SwiftHelperProcess): Boolean {
+        val serverStart = runCatching { httpServer.start(settings.host, settings.port) }
+        if (serverStart.isSuccess) return true
+        val error = serverStart.exceptionOrNull()
+        if (error is InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
+        LOG.error("Failed to start HTTP server, stopping helper", error)
+        helper.stop()
+        swiftHelper = null
+        notify(
+            AppleAiBundle.message(
+                "apple.ai.notification.error",
+                error?.message ?: "Failed to bind server port",
+            ),
+            NotificationType.ERROR,
+        )
+        return false
     }
 
     fun stopHelper() {
