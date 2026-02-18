@@ -12,7 +12,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 
-/** Unit tests for [dev.sebastiano.plugins.appleintelligence.SwiftHelperProcess] validation, lifecycle, and error handling. */
+/** Unit tests for [SwiftHelperProcess] validation, lifecycle, and error handling. */
 class SwiftHelperProcessTest {
 
     private lateinit var tempDir: Path
