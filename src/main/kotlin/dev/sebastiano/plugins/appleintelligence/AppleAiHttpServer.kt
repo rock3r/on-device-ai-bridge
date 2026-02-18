@@ -37,27 +37,27 @@ internal class AppleAiHttpServer {
         workerGroup = worker
 
         runCatching {
-            val bootstrap =
-                ServerBootstrap()
-                    .group(boss, worker)
-                    .channel(NioServerSocketChannel::class.java)
-                    .childHandler(
-                        object : ChannelInitializer<SocketChannel>() {
-                            override fun initChannel(ch: SocketChannel) {
-                                ch.pipeline()
-                                    .addLast(
-                                        HttpServerCodec(),
-                                        HttpObjectAggregator(MAX_CONTENT_LENGTH),
-                                        AppleAiHttpHandler(),
-                                    )
+                val bootstrap =
+                    ServerBootstrap()
+                        .group(boss, worker)
+                        .channel(NioServerSocketChannel::class.java)
+                        .childHandler(
+                            object : ChannelInitializer<SocketChannel>() {
+                                override fun initChannel(ch: SocketChannel) {
+                                    ch.pipeline()
+                                        .addLast(
+                                            HttpServerCodec(),
+                                            HttpObjectAggregator(MAX_CONTENT_LENGTH),
+                                            AppleAiHttpHandler(),
+                                        )
+                                }
                             }
-                        }
-                    )
+                        )
 
-            val future = bootstrap.bind(InetSocketAddress(host, port)).sync()
-            serverChannel = future.channel()
-            LOG.info("Apple AI HTTP server started on $host:$port")
-        }
+                val future = bootstrap.bind(InetSocketAddress(host, port)).sync()
+                serverChannel = future.channel()
+                LOG.info("Apple AI HTTP server started on $host:$port")
+            }
             .onFailure { e ->
                 if (e is InterruptedException) {
                     Thread.currentThread().interrupt()

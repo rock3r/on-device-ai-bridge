@@ -118,10 +118,7 @@ internal class AppleAiService(val coroutineScope: CoroutineScope) : Disposable {
         helper.stop()
         swiftHelper = null
         notify(
-            AppleAiBundle.message(
-                "apple.ai.notification.error",
-                error?.message ?: "Failed to bind server port",
-            ),
+            AppleAiBundle.message("apple.ai.notification.error", error?.message ?: "Failed to bind server port"),
             NotificationType.ERROR,
         )
         return false

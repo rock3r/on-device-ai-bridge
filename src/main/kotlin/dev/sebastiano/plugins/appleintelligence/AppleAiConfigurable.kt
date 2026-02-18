@@ -344,7 +344,6 @@ internal class AppleAiConfigurable :
             AppleAiBundle.message("apple.ai.settings.status.model.unknown")
         }
     }
-
 }
 
 private fun Panel.endpointRow(settings: AppleAiSettings, capture: (JEditorPane) -> Unit) {
@@ -355,11 +354,7 @@ private fun Panel.endpointRow(settings: AppleAiSettings, capture: (JEditorPane) 
         }
         actionButton(
             object :
-                DumbAwareAction(
-                    AppleAiBundle.message("apple.ai.settings.endpoint.copy"),
-                    null,
-                    AllIcons.Actions.Copy,
-                ) {
+                DumbAwareAction(AppleAiBundle.message("apple.ai.settings.endpoint.copy"), null, AllIcons.Actions.Copy) {
                 override fun actionPerformed(e: AnActionEvent) {
                     @Suppress("HttpUrlsUsage")
                     val url = "http://${displayHost(settings)}:${settings.state.port}/v1/chat/completions"
@@ -386,10 +381,7 @@ private fun Panel.toggleRow(
                         service.stopHelper()
                     } else {
                         val project = ProjectManager.getInstance().defaultProject
-                        runWithModalProgressBlocking(
-                            project,
-                            AppleAiBundle.message("apple.ai.settings.start"),
-                        ) {
+                        runWithModalProgressBlocking(project, AppleAiBundle.message("apple.ai.settings.start")) {
                             service.startHelper()
                         }
                     }
@@ -399,10 +391,7 @@ private fun Panel.toggleRow(
                 .component
         )
         checkBox(AppleAiBundle.message("apple.ai.settings.autoStart"))
-            .bindSelected(
-                { settings.state.autoStart },
-                { settings.loadState(settings.state.copy(autoStart = it)) },
-            )
+            .bindSelected({ settings.state.autoStart }, { settings.loadState(settings.state.copy(autoStart = it)) })
     }
 }
 

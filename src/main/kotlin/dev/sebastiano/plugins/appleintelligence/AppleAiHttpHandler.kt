@@ -132,8 +132,7 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         private fun String.redactedForLog(): String =
             when {
                 length <= REDACT_SHORT_LENGTH -> "***"
-                length <= REDACT_MEDIUM_LENGTH ->
-                    "${take(REDACT_SHORT_EDGE)}...${takeLast(REDACT_SHORT_EDGE)}"
+                length <= REDACT_MEDIUM_LENGTH -> "${take(REDACT_SHORT_EDGE)}...${takeLast(REDACT_SHORT_EDGE)}"
                 else -> "${take(REDACT_LONG_EDGE)}...${takeLast(REDACT_LONG_EDGE)}"
             }
 
@@ -496,7 +495,6 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         setCorsHeaders(request, response)
         ctx.writeAndFlush(response)
     }
-
 
     private fun sendStreamDelta(
         channel: Channel,
