@@ -93,8 +93,8 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
 
         /**
          * Checks whether the given [request] carries a valid `Authorization: Bearer <token>` header matching
-         * [expectedKey]. Returns `false` if the header is absent, does not use the Bearer scheme, or the token does
-         * not match.
+         * [expectedKey]. Returns `false` if the header is absent, does not use the Bearer scheme, or the token does not
+         * match.
          *
          * Uses constant-time comparison to prevent timing side-channel attacks.
          */
@@ -211,12 +211,7 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         // Rate limiting check
         val remoteAddress = ctx.channel().remoteAddress()?.toString() ?: "unknown"
         if (isRateLimited(remoteAddress)) {
-            sendErrorJson(
-                HttpResponseStatus.TOO_MANY_REQUESTS,
-                "Too many failed authentication attempts",
-                request,
-                ctx,
-            )
+            sendErrorJson(HttpResponseStatus.TOO_MANY_REQUESTS, "Too many failed authentication attempts", request, ctx)
             return
         }
 
@@ -257,11 +252,7 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         }
     }
 
-    private fun handleModels(
-        request: FullHttpRequest,
-        ctx: ChannelHandlerContext,
-        service: AppleAiService,
-    ) {
+    private fun handleModels(request: FullHttpRequest, ctx: ChannelHandlerContext, service: AppleAiService) {
         val models =
             if (service.isRunning) {
                 listOf(
@@ -279,11 +270,7 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         sendJson(request, ctx, mapper.writeValueAsBytes(response))
     }
 
-    private fun handleChatCompletions(
-        request: FullHttpRequest,
-        ctx: ChannelHandlerContext,
-        service: AppleAiService,
-    ) {
+    private fun handleChatCompletions(request: FullHttpRequest, ctx: ChannelHandlerContext, service: AppleAiService) {
         if (!service.isRunning) {
             sendErrorJson(
                 HttpResponseStatus.SERVICE_UNAVAILABLE,
@@ -368,22 +355,12 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
                 sendChatCompletionResponse(chatRequest, result, request, ctx)
             } catch (_: TimeoutCancellationException) {
                 LOG.warn("Apple AI generation timed out after $GENERATION_TIMEOUT")
-                sendErrorJson(
-                    HttpResponseStatus.GATEWAY_TIMEOUT,
-                    "Generation timed out",
-                    request,
-                    ctx,
-                )
+                sendErrorJson(HttpResponseStatus.GATEWAY_TIMEOUT, "Generation timed out", request, ctx)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: IllegalStateException) {
                 LOG.error("Error generating from Apple AI helper", e)
-                sendErrorJson(
-                    HttpResponseStatus.INTERNAL_SERVER_ERROR,
-                    e.message ?: "Generation error",
-                    request,
-                    ctx,
-                )
+                sendErrorJson(HttpResponseStatus.INTERNAL_SERVER_ERROR, e.message ?: "Generation error", request, ctx)
             }
         }
     }
@@ -478,8 +455,7 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
                             LOG.debug("Apple AI streaming completed after $chunkCount chunks")
                             sendStreamDone(channel, streamContext)
                         }
-                        SwiftResponseType.ERROR ->
-                            sendSseErrorAndClose(channel, resp.error ?: "Unknown error")
+                        SwiftResponseType.ERROR -> sendSseErrorAndClose(channel, resp.error ?: "Unknown error")
                         else -> LOG.debug("Apple AI streaming: ignored response type: ${resp.type}")
                     }
                 }
@@ -521,11 +497,7 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
         return response
     }
 
-    private fun sendJson(
-        request: FullHttpRequest,
-        ctx: ChannelHandlerContext,
-        jsonBytes: ByteArray,
-    ) {
+    private fun sendJson(request: FullHttpRequest, ctx: ChannelHandlerContext, jsonBytes: ByteArray) {
         LOG.debug("Apple AI: sending JSON response (${jsonBytes.size} bytes)")
         val response = jsonResponse(HttpResponseStatus.OK, jsonBytes)
         setCorsHeaders(request, response)
@@ -571,9 +543,7 @@ internal class AppleAiHttpHandler : SimpleChannelInboundHandler<FullHttpRequest>
                 created = streamContext.created,
                 model = streamContext.model,
                 choices =
-                    listOf(
-                        ChatCompletionStreamChoice(index = 0, delta = ChatCompletionDelta(), finishReason = "stop")
-                    ),
+                    listOf(ChatCompletionStreamChoice(index = 0, delta = ChatCompletionDelta(), finishReason = "stop")),
             )
         val finalSse = "data: ${mapper.writeValueAsString(finalChunk)}\n\n"
         channel.writeAndFlush(Unpooled.copiedBuffer(finalSse, CharsetUtil.UTF_8))

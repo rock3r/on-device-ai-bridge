@@ -1,7 +1,6 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package dev.sebastiano.plugins.appleintelligence
 
-import dev.sebastiano.plugins.appleintelligence.AppleAiHttpHandler
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.DefaultFullHttpRequest
 import io.netty.handler.codec.http.DefaultHttpResponse
@@ -17,8 +16,8 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for [AppleAiHttpHandler] security-critical logic: authentication,
- * CORS, rate limiting, and origin validation.
+ * Unit tests for [AppleAiHttpHandler] security-critical logic: authentication, CORS, rate limiting, and origin
+ * validation.
  *
  * Authentication, CORS, and other helper methods are exposed as `@VisibleForTesting` companion functions so they can be
  * tested directly without reflection or IntelliJ platform fixtures.

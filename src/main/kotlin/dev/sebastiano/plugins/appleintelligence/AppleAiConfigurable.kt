@@ -30,17 +30,17 @@ import com.intellij.util.ui.NamedColorUtil
 import java.awt.Component
 import java.nio.file.Files
 import java.nio.file.Path
+import javax.swing.BorderFactory
 import javax.swing.JButton
 import javax.swing.JEditorPane
 import javax.swing.JLabel
+import javax.swing.JTextField
 import javax.swing.Timer
 import kotlin.properties.Delegates
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.annotations.Nls
-import javax.swing.BorderFactory
-import javax.swing.JTextField
 
 private const val LOOPBACK_HOST = "127.0.0.1"
 private const val ALL_INTERFACES_HOST = "0.0.0.0"
@@ -88,8 +88,13 @@ internal class AppleAiConfigurable :
         if (reason != null) return panel
 
         setupStatusTimer(
-            settings, validHelper, serverStatusLabel, modelStatusLabel,
-            endpointComment, toggleButton, disabledReasonLabel,
+            settings,
+            validHelper,
+            serverStatusLabel,
+            modelStatusLabel,
+            endpointComment,
+            toggleButton,
+            disabledReasonLabel,
         )
 
         return panel
@@ -162,13 +167,12 @@ internal class AppleAiConfigurable :
                     )
             }
             row("") {
-                label(disabledReasonText())
-                    .applyToComponent {
-                        disabledReasonLabel = this
-                        icon = AllIcons.General.Warning
-                        foreground = NamedColorUtil.getInactiveTextColor()
-                        isVisible = !validHelper()
-                    }
+                label(disabledReasonText()).applyToComponent {
+                    disabledReasonLabel = this
+                    icon = AllIcons.General.Warning
+                    foreground = NamedColorUtil.getInactiveTextColor()
+                    isVisible = !validHelper()
+                }
             }
         }
 
@@ -215,10 +219,7 @@ internal class AppleAiConfigurable :
         row(AppleAiBundle.message("apple.ai.settings.port")) {
             intTextField(MIN_PORT..MAX_PORT)
                 .columns(PORT_FIELD_COLUMNS)
-                .bindIntText(
-                    { settings.state.port },
-                    { settings.loadState(settings.state.copy(port = it)) },
-                )
+                .bindIntText({ settings.state.port }, { settings.loadState(settings.state.copy(port = it)) })
                 .onChanged { panel().apply() }
                 .comment(AppleAiBundle.message("apple.ai.settings.restartRequired"))
         }
@@ -394,8 +395,7 @@ internal class AppleAiConfigurable :
         }
     }
 
-    @Nls
-    private fun disabledReasonText(): String = AppleAiBundle.message("apple.ai.settings.status.disabled.reason")
+    @Nls private fun disabledReasonText(): String = AppleAiBundle.message("apple.ai.settings.status.disabled.reason")
 
     private fun isHelperPathValid(settings: AppleAiSettings): Boolean =
         isHelperPathValid(settings.state.swiftHelperPath)
@@ -427,11 +427,7 @@ private fun Panel.apiKeyCommentRow() {
     row("") { comment(AppleAiBundle.message("apple.ai.settings.apiKey.comment")) }
 }
 
-private fun Panel.apiKeyRegenerateRow(
-    settings: AppleAiSettings,
-    panel: () -> DialogPanel,
-    apiKeyField: JTextField,
-) {
+private fun Panel.apiKeyRegenerateRow(settings: AppleAiSettings, panel: () -> DialogPanel, apiKeyField: JTextField) {
     row("") {
         button(AppleAiBundle.message("apple.ai.settings.apiKey.regenerate")) {
             val confirmed =

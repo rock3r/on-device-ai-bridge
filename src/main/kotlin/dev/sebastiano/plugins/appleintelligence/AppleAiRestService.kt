@@ -26,6 +26,7 @@ import io.netty.handler.codec.http.LastHttpContent
 import io.netty.handler.codec.http.QueryStringDecoder
 import io.netty.util.CharsetUtil
 import java.io.IOException
+import java.net.URI
 import java.security.MessageDigest
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -42,7 +43,6 @@ import kotlinx.coroutines.withTimeout
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.ide.RestService
 import org.jetbrains.io.response
-import java.net.URI
 
 private const val MILLIS_PER_SECOND = 1000L
 
@@ -64,13 +64,7 @@ internal class AppleAiRestService : RestService() {
         private val ALLOWED_HOSTS = setOf("localhost", "127.0.0.1")
 
         private val SUPPORTED_PATHS =
-            setOf(
-                "/v1/models",
-                "/models",
-                "/v1/chat/completions",
-                "/chat/completions",
-                "/health",
-            )
+            setOf("/v1/models", "/models", "/v1/chat/completions", "/chat/completions", "/health")
 
         private const val MAX_REQUEST_BODY_BYTES = 1024 * 1024 // 1 MB
 
@@ -105,8 +99,8 @@ internal class AppleAiRestService : RestService() {
 
         /**
          * Checks whether the given [request] carries a valid `Authorization: Bearer <token>` header matching
-         * [expectedKey]. Returns `false` if the header is absent, does not use the Bearer scheme, or the token does
-         * not match.
+         * [expectedKey]. Returns `false` if the header is absent, does not use the Bearer scheme, or the token does not
+         * match.
          *
          * Uses constant-time comparison to prevent timing side-channel attacks.
          */
@@ -400,12 +394,7 @@ internal class AppleAiRestService : RestService() {
                 sendChatCompletionResponse(chatRequest, result, request, context)
             } catch (_: TimeoutCancellationException) {
                 LOG.warn("Apple AI generation timed out after $GENERATION_TIMEOUT")
-                sendErrorJson(
-                    HttpResponseStatus.GATEWAY_TIMEOUT,
-                    "Generation timed out",
-                    request,
-                    context,
-                )
+                sendErrorJson(HttpResponseStatus.GATEWAY_TIMEOUT, "Generation timed out", request, context)
             } catch (e: CancellationException) {
                 LOG.warn("Apple AI generation cancelled", e)
                 throw e
@@ -598,12 +587,7 @@ private fun sendStreamDelta(
     channel.writeAndFlush(Unpooled.copiedBuffer(sseData, CharsetUtil.UTF_8))
 }
 
-private fun sendStreamDone(
-    mapper: ObjectMapper,
-    logger: Logger,
-    channel: Channel,
-    streamContext: StreamContext,
-) {
+private fun sendStreamDone(mapper: ObjectMapper, logger: Logger, channel: Channel, streamContext: StreamContext) {
     val finalChunk =
         ChatCompletionStreamResponse(
             id = streamContext.responseId,
@@ -621,12 +605,7 @@ private fun nowEpochSeconds(): Long = System.currentTimeMillis() / MILLIS_PER_SE
 
 private data class StreamContext(val responseId: String, val created: Long, val model: String)
 
-private fun sendSseErrorAndClose(
-    mapper: ObjectMapper,
-    logger: Logger,
-    channel: Channel,
-    errorMessage: String,
-) {
+private fun sendSseErrorAndClose(mapper: ObjectMapper, logger: Logger, channel: Channel, errorMessage: String) {
     val errorJson =
         mapper.writeValueAsString(
             OpenAiError(error = OpenAiErrorDetail(message = errorMessage, type = "internal_error"))

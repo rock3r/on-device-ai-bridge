@@ -18,8 +18,7 @@ private const val MAX_CONTENT_LENGTH = 1024 * 1024 // 1 MB
 
 internal class AppleAiHttpServer {
 
-    @Volatile
-    private var serverChannel: Channel? = null
+    @Volatile private var serverChannel: Channel? = null
     private var bossGroup: NioEventLoopGroup? = null
     private var workerGroup: NioEventLoopGroup? = null
 
@@ -38,18 +37,22 @@ internal class AppleAiHttpServer {
         workerGroup = worker
 
         try {
-            val bootstrap = ServerBootstrap()
-                .group(boss, worker)
-                .channel(NioServerSocketChannel::class.java)
-                .childHandler(object : ChannelInitializer<SocketChannel>() {
-                    override fun initChannel(ch: SocketChannel) {
-                        ch.pipeline().addLast(
-                            HttpServerCodec(),
-                            HttpObjectAggregator(MAX_CONTENT_LENGTH),
-                            AppleAiHttpHandler(),
-                        )
-                    }
-                })
+            val bootstrap =
+                ServerBootstrap()
+                    .group(boss, worker)
+                    .channel(NioServerSocketChannel::class.java)
+                    .childHandler(
+                        object : ChannelInitializer<SocketChannel>() {
+                            override fun initChannel(ch: SocketChannel) {
+                                ch.pipeline()
+                                    .addLast(
+                                        HttpServerCodec(),
+                                        HttpObjectAggregator(MAX_CONTENT_LENGTH),
+                                        AppleAiHttpHandler(),
+                                    )
+                            }
+                        }
+                    )
 
             val future = bootstrap.bind(InetSocketAddress(host, port)).sync()
             serverChannel = future.channel()

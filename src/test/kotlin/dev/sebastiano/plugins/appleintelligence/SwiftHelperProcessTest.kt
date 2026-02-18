@@ -1,8 +1,6 @@
 // Copyright 2000-2026 JetBrains s.r.o. and contributors. Use of this source code is governed by the Apache 2.0 license.
 package dev.sebastiano.plugins.appleintelligence
 
-import dev.sebastiano.plugins.appleintelligence.ChatMessage
-import dev.sebastiano.plugins.appleintelligence.SwiftHelperProcess
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlinx.coroutines.runBlocking

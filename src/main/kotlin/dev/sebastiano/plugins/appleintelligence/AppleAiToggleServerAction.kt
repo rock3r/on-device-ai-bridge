@@ -30,10 +30,7 @@ internal class AppleAiToggleServerAction : DumbAwareAction() {
             service.stopHelper()
         } else {
             val project = e.project ?: ProjectManager.getInstance().defaultProject
-            runWithModalProgressBlocking(
-                project,
-                AppleAiBundle.message("apple.ai.settings.start"),
-            ) {
+            runWithModalProgressBlocking(project, AppleAiBundle.message("apple.ai.settings.start")) {
                 service.startHelper()
             }
         }

@@ -250,7 +250,11 @@ internal class SwiftHelperProcess(private val binaryPath: Path) : Disposable {
 
     suspend fun checkStatus(): SwiftResponse {
         if (!isRunning) {
-            return SwiftResponse(type = SwiftResponseType.STATUS, modelAvailable = false, reason = "Process not running")
+            return SwiftResponse(
+                type = SwiftResponseType.STATUS,
+                modelAvailable = false,
+                reason = "Process not running",
+            )
         }
 
         val deferred =
@@ -296,11 +300,7 @@ internal class SwiftHelperProcess(private val binaryPath: Path) : Disposable {
                     )
                 )
                 d
-            }
-                ?: return SwiftResponse(
-                    type = SwiftResponseType.ERROR,
-                    error = "Another request is already in progress",
-                )
+            } ?: return SwiftResponse(type = SwiftResponseType.ERROR, error = "Another request is already in progress")
 
         return deferred.await()
     }
@@ -334,12 +334,7 @@ internal class SwiftHelperProcess(private val binaryPath: Path) : Disposable {
                 }
 
             if (channel == null) {
-                send(
-                    SwiftResponse(
-                        type = SwiftResponseType.ERROR,
-                        error = "Another request is already in progress",
-                    )
-                )
+                send(SwiftResponse(type = SwiftResponseType.ERROR, error = "Another request is already in progress"))
                 close()
                 return@callbackFlow
             }
@@ -347,9 +342,7 @@ internal class SwiftHelperProcess(private val binaryPath: Path) : Disposable {
             val forwardJob = launch {
                 for (response in channel) {
                     send(response)
-                    if (response.type == SwiftResponseType.STREAM_DONE ||
-                        response.type == SwiftResponseType.ERROR
-                    ) {
+                    if (response.type == SwiftResponseType.STREAM_DONE || response.type == SwiftResponseType.ERROR) {
                         break
                     }
                 }
