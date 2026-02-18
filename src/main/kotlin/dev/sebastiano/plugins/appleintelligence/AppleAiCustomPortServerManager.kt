@@ -16,11 +16,4 @@ internal class AppleAiCustomPortServerManager : CustomPortServerManagerBase() {
     override fun cannotBind(e: Exception, port: Int) {
         // Port binding failed — logged by the built-in server infrastructure
     }
-
-    companion object {
-        fun portChanged() {
-            EP_NAME.findExtensionOrFail(AppleAiCustomPortServerManager::class.java)
-                .portChanged()
-        }
-    }
 }

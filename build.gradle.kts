@@ -1,5 +1,6 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
@@ -115,7 +116,13 @@ intellijPlatform {
             }
     }
 
-    pluginVerification { ides { recommended() } }
+    pluginVerification {
+        ides {
+            // TODO: Remove once https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/2090 is fixed.
+            create(IntelliJPlatformType.IntellijIdea, "2025.3")
+            create(IntelliJPlatformType.IntellijIdea, "261.20869.38")
+        }
+    }
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
