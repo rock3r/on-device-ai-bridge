@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.1.1]
+
+### Changed
+
+- Remove internal API access for custom port server manager extension lookup
+- Pin plugin verifier IDE versions temporarily for local runs (remove when issue 2090 is fixed)
+
 ## [1.1.0]
 
 ### Changed
@@ -28,6 +35,7 @@
 - API key authentication support
 - macOS-only (Apple Silicon, macOS 26+ with Apple Intelligence)
 
-[Unreleased]: https://github.com/rock3r/apple-intelligence-plugin/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/rock3r/apple-intelligence-plugin/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/rock3r/apple-intelligence-plugin/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/rock3r/apple-intelligence-plugin/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/rock3r/apple-intelligence-plugin/commits/v1.0.0
