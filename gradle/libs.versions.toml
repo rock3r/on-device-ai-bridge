@@ -7,7 +7,7 @@ jackson = "2.21.0"
 # plugins
 changelog = "2.5.0"
 detekt = "1.23.8"
-ktfmt = "0.25.0"
+ktfmt = "0.26.0"
 intelliJPlatform = "2.11.0"
 kotlin = "2.3.0"
 kover = "0.9.5"
